@@ -1,0 +1,17 @@
+[Leak Log] 2026-06-14 - Block A (Boys Hostel)
+Reported: Ground floor washroom, cistern valve leak. Cause: worn float valve.
+Resolved 2026-06-15 by campus plumber. Estimated water lost: ~600L before fix.
+
+[Leak Log] 2026-07-02 - Block B (Girls Hostel)
+Reported: Outdoor tap near garden left partially open overnight. Cause: user error, not a
+mechanical fault. Resolved same day.
+
+[Leak Log] 2026-07-20 - Block C (Day Scholars/Admin)
+Reported: Underground pipe joint near the admin block canteen showed slow seepage.
+Cause: aging pipe joint. Resolved 2026-07-23 after excavation and joint replacement.
+Estimated water lost: ~2200L over the detection-to-fix window.
+
+[Maintenance Note] Overhead Tanks
+All four blocks' overhead tanks were last inspected in March 2026. Block C's tank ball-valve
+is nearing end-of-life and was flagged for replacement in Q3 2026 — consistent with recent
+gradual consumption increases observed in that zone.

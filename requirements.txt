@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pandas
+numpy
+scikit-learn
+statsmodels
+python-multipart
+anthropic  # optional: only used if ANTHROPIC_API_KEY is set, for LLM-composed chat answers
+
+requests

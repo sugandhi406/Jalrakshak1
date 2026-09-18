@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JalRakshak AI — Water Guardian Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#08191c;
+    --panel:#0e2a2f;
+    --panel-2:#123840;
+    --line:#1e4a52;
+    --teal:#1fb3a3;
+    --teal-bright:#4fd8c4;
+    --water:#2a6f8a;
+    --ochre:#e0a52e;
+    --alarm:#e0563f;
+    --text:#eaf3f2;
+    --text-dim:#9fc0bd;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 15% -10%, rgba(31,179,163,0.14), transparent 45%),
+      radial-gradient(ellipse at 100% 0%, rgba(42,111,138,0.18), transparent 40%),
+      var(--ink);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  header{
+    padding:28px 32px 18px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-mark{
+    width:44px;height:44px;border-radius:10px;
+    background:linear-gradient(160deg,var(--teal),var(--water));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 24px rgba(31,179,163,0.35);
+  }
+  .brand-mark svg{width:24px;height:24px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:22px;margin:0;font-weight:700;letter-spacing:0.2px;}
+  .tagline{color:var(--text-dim);font-size:13px;margin-top:2px;}
+  .loc-badge{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--teal-bright);
+    border:1px solid var(--line);padding:6px 12px;border-radius:20px;background:rgba(31,179,163,0.06);
+  }
+  main{padding:24px 32px 60px;max-width:1400px;margin:0 auto;}
+
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:22px;}
+  .stat-card{
+    background:linear-gradient(160deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;
+    position:relative;overflow:hidden;
+  }
+  .stat-card .label{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+  .stat-card .value{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;margin-top:6px;}
+  .stat-card .sub{font-size:12px;color:var(--text-dim);margin-top:4px;}
+  .stat-card.alert .value{color:var(--alarm);}
+  .stat-card.ok .value{color:var(--teal-bright);}
+
+  .grid{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+  @media(max-width:980px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 22px;margin-bottom:20px;
+  }
+  .panel h2{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 14px;display:flex;align-items:center;justify-content:space-between;font-weight:600;}
+  select{
+    background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:8px;
+    padding:7px 12px;font-family:'Inter',sans-serif;font-size:13px;
+  }
+
+  .zone-flowbars{display:flex;flex-direction:column;gap:12px;margin-top:4px;}
+  .flow-row{display:flex;align-items:center;gap:10px;}
+  .flow-label{width:170px;font-size:12.5px;color:var(--text-dim);flex-shrink:0;}
+  .flow-track{flex:1;height:10px;background:rgba(255,255,255,0.05);border-radius:6px;overflow:hidden;position:relative;}
+  .flow-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--water),var(--teal-bright));position:relative;}
+  .flow-fill.risk{background:linear-gradient(90deg,var(--ochre),var(--alarm));}
+  .flow-fill::after{
+    content:'';position:absolute;inset:0;
+    background:repeating-linear-gradient(90deg, rgba(255,255,255,0.15) 0 2px, transparent 2px 8px);
+    animation:flow 1.4s linear infinite;
+  }
+  @keyframes flow{from{transform:translateX(0);}to{transform:translateX(10px);}}
+  .flow-val{width:80px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);}
+
+  canvas{max-height:280px;}
+
+  .alert-list{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;}
+  .alert-item{
+    border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,0.02);
+  }
+  .alert-item.high{border-left:3px solid var(--alarm);}
+  .alert-item.medium{border-left:3px solid var(--ochre);}
+  .alert-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+  .alert-zone{font-weight:600;font-size:13.5px;}
+  .sev-tag{font-size:10.5px;padding:2px 8px;border-radius:12px;text-transform:uppercase;letter-spacing:0.5px;font-family:'JetBrains Mono',monospace;}
+  .sev-tag.High{background:rgba(224,86,63,0.18);color:var(--alarm);}
+  .sev-tag.Medium{background:rgba(224,165,46,0.18);color:var(--ochre);}
+  .alert-note{font-size:12.5px;color:var(--text-dim);line-height:1.5;}
+  .alert-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:6px;}
+
+  .ticket-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 0;border-bottom:1px dashed var(--line);font-size:12.5px;
+  }
+  .ticket-item:last-child{border-bottom:none;}
+  .status-pill{background:rgba(31,179,163,0.15);color:var(--teal-bright);padding:3px 10px;border-radius:12px;font-size:10.5px;font-family:'JetBrains Mono',monospace;}
+
+  /* Chat */
+  .chat-panel{display:flex;flex-direction:column;height:480px;}
+  .chat-log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px;margin-bottom:12px;}
+  .msg{max-width:88%;padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.5;}
+  .msg.user{align-self:flex-end;background:linear-gradient(160deg,var(--teal),var(--water));color:#04191a;font-weight:500;}
+  .msg.bot{align-self:flex-start;background:var(--panel-2);border:1px solid var(--line);color:var(--text);}
+  .chat-input{display:flex;gap:8px;}
+  .chat-input input{
+    flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
+    padding:11px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;
+  }
+  .chat-input input:focus{outline:1px solid var(--teal);}
+  .chat-input button{
+    background:var(--teal);color:#04191a;border:none;border-radius:10px;padding:0 18px;
+    font-weight:600;cursor:pointer;font-size:13px;
+  }
+  .chat-input button:hover{background:var(--teal-bright);}
+  .suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .sugg{
+    font-size:11.5px;border:1px solid var(--line);color:var(--text-dim);padding:5px 10px;border-radius:14px;
+    cursor:pointer;background:rgba(255,255,255,0.02);
+  }
+  .sugg:hover{border-color:var(--teal);color:var(--teal-bright);}
+
+  footer{text-align:center;color:var(--text-dim);font-size:11.5px;padding:20px;font-family:'JetBrains Mono',monospace;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C12 2 5 11 5 15.5C5 19.09 8.13 22 12 22C15.87 22 19 19.09 19 15.5C19 11 12 2 12 2Z" fill="#04191a"/>
+      </svg>
+    </div>
+    <div>
+      <h1>JalRakshak AI</h1>
+      <div class="tagline">Campus water guardian — leakage risk, demand forecasts & conservation</div>
+    </div>
+  </div>
+  <div class="loc-badge">● PARBHANI CAMPUS PILOT — SIMULATED DATA / PROTOTYPE DEMO</div>
+</header>
+
+<main>
+  <div class="stat-row" id="statRow"></div>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2>Consumption &amp; 7-Day Forecast <select id="zoneSelect"></select></h2>
+        <canvas id="consumptionChart"></canvas>
+      </div>
+      <div class="panel">
+        <h2>Live Zone Flow (last 7 days total)</h2>
+        <div class="zone-flowbars" id="flowBars"></div>
+      </div>
+      <div class="panel">
+        <h2>Conservation Recommendations</h2>
+        <div id="recommendationList" class="alert-list" style="max-height:260px;"></div>
+      </div>
+      <div class="panel">
+        <h2>Optional Leakage Image Triage</h2>
+        <div style="color:var(--text-dim);font-size:12px;line-height:1.5;margin-bottom:10px;">
+          Upload a site photo when a meter anomaly is flagged. Prototype triage is advisory and must be confirmed physically.
+        </div>
+        <input id="leakImage" type="file" accept="image/*" style="color:var(--text-dim);font-size:12px;width:100%;">
+        <button onclick="triageImage()" style="margin-top:10px;background:var(--teal);border:0;border-radius:9px;padding:9px 14px;font-weight:600;cursor:pointer;">Analyze image</button>
+        <div id="imageResult" style="margin-top:10px;font-size:12px;color:var(--text-dim);"></div>
+      </div>
+      <div class="panel">
+        <h2>Agent-Generated Tickets <span class="mono" style="font-size:11px;color:var(--text-dim);">auto-dispatched</span></h2>
+        <div id="ticketList"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h2>Leakage-Risk Alerts <span id="alertCount" class="mono" style="font-size:11px;color:var(--alarm);"></span></h2>
+        <div class="alert-list" id="alertList"></div>
+      </div>
+      <div class="panel chat-panel">
+        <h2>Ask JalRakshak</h2>
+        <div class="suggestions">
+          <div class="sugg" onclick="askSuggested(this)">Which block used the most water?</div>
+          <div class="sugg" onclick="askSuggested(this)">Is Block A leaking?</div>
+          <div class="sugg" onclick="askSuggested(this)">Why has Block C's usage increased?</div>
+        </div>
+        <div class="chat-log" id="chatLog">
+          <div class="msg bot">Namaste! I'm JalRakshak — ask me about consumption, leaks, or conservation across the campus.</div>
+        </div>
+        <div class="chat-input">
+          <input id="chatInput" type="text" placeholder="Ask about a block, leak risk, or forecast..." onkeydown="if(event.key==='Enter')sendChat()">
+          <button onclick="sendChat()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>JalRakshak AI · Prototype pilot for a college/hostel campus in Parbhani, Maharashtra · SDG 6 — Clean Water &amp; Sanitation</footer>
+
+<script>
+const API = "http://localhost:8000";
+const PROJECT_SCOPE = "Single college/hostel campus pilot · Parbhani, Maharashtra · SDG 6";
+let ZONES = [];
+let currentZone = null;
+let chart = null;
+
+async function j(url, opts){ const r = await fetch(url, opts); return r.json(); }
+
+async function init(){
+  const z = await j(`${API}/api/zones`);
+  ZONES = z.zones;
+  const sel = document.getElementById('zoneSelect');
+  sel.innerHTML = ZONES.map(zn => `<option value="${zn}">${zn}</option>`).join('');
+  currentZone = ZONES[0];
+  sel.addEventListener('change', e => { currentZone = e.target.value; loadChart(); });
+
+  await loadStats();
+  await loadChart();
+  await loadFlowBars();
+  await loadAlerts();
+  await loadTickets();
+  await loadRecommendations();
+}
+
+async function loadStats(){
+  const alerts = await j(`${API}/api/alerts`);
+  const cons = await j(`${API}/api/consumption?days=7`);
+  const total7 = cons.reduce((s,r)=>s+r.litres,0);
+  const highCount = alerts.alerts.filter(a=>a.severity==='High').length;
+  const tickets = await j(`${API}/api/tickets`);
+
+  document.getElementById('statRow').innerHTML = `
+    <div class="stat-card">
+      <div class="label">Campus usage (7d)</div>
+      <div class="value">${Math.round(total7).toLocaleString()} L</div>
+      <div class="sub">across ${ZONES.length} zones</div>
+    </div>
+    <div class="stat-card alert">
+      <div class="label">Active leak-risk alerts</div>
+      <div class="value">${alerts.count}</div>
+      <div class="sub">${highCount} high severity</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Agent tickets open</div>
+      <div class="value">${tickets.tickets.filter(t=>t.status==='Open').length}</div>
+      <div class="sub">auto-dispatched for inspection</div>
+    </div>
+    <div class="stat-card ok">
+      <div class="label">SDG 6 focus</div>
+      <div class="value">Efficiency</div>
+      <div class="sub">Parbhani hostel pilot</div>
+    </div>`;
+}
+
+async function loadChart(){
+  const hist = await j(`${API}/api/consumption?zone=${encodeURIComponent(currentZone)}&days=30`);
+  const fc = await j(`${API}/api/forecast?zone=${encodeURIComponent(currentZone)}`);
+
+  const histLabels = hist.map(r=>r.date);
+  const histVals = hist.map(r=>r.litres);
+  const fcLabels = fc.forecast.map(r=>r.date);
+  const fcVals = fc.forecast.map(r=>r.litres);
+  const fcUpper = fc.forecast.map(r=>r.upper);
+  const fcLower = fc.forecast.map(r=>r.lower);
+
+  const labels = [...histLabels, ...fcLabels];
+  const historySeries = [...histVals, ...Array(fcLabels.length).fill(null)];
+  const forecastSeries = [...Array(histLabels.length-1).fill(null), histVals[histVals.length-1], ...fcVals];
+  const upperSeries = [...Array(histLabels.length-1).fill(null), histVals[histVals.length-1], ...fcUpper];
+  const lowerSeries = [...Array(histLabels.length-1).fill(null), histVals[histVals.length-1], ...fcLower];
+
+  if(chart) chart.destroy();
+  const ctx = document.getElementById('consumptionChart');
+  chart = new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Actual', data:historySeries, borderColor:'#4fd8c4', backgroundColor:'rgba(79,216,196,0.08)', fill:true, tension:0.3, pointRadius:0, borderWidth:2 },
+      { label:'Forecast', data:forecastSeries, borderColor:'#e0a52e', borderDash:[6,4], tension:0.3, pointRadius:0, borderWidth:2, fill:false },
+      { label:'Upper bound', data:upperSeries, borderColor:'rgba(224,165,46,0.25)', pointRadius:0, borderWidth:1, fill:'+1' },
+      { label:'Lower bound', data:lowerSeries, borderColor:'rgba(224,165,46,0.25)', pointRadius:0, borderWidth:1, fill:false },
+    ]},
+    options:{
+      responsive:true,
+      plugins:{ legend:{ labels:{ color:'#9fc0bd', font:{family:'Inter',size:11} } } },
+      scales:{
+        x:{ ticks:{ color:'#6f9490', maxTicksLimit:8, font:{size:10} }, grid:{ color:'rgba(255,255,255,0.03)' } },
+        y:{ ticks:{ color:'#6f9490', font:{size:10} }, grid:{ color:'rgba(255,255,255,0.05)' } }
+      }
+    }
+  });
+}
+
+async function loadFlowBars(){
+  const cons = await j(`${API}/api/consumption?days=7`);
+  const alerts = await j(`${API}/api/alerts`);
+  const riskZones = new Set(alerts.alerts.filter(a=>a.severity==='High').map(a=>a.zone));
+  const totals = {};
+  cons.forEach(r=>{ totals[r.zone] = (totals[r.zone]||0) + r.litres; });
+  const max = Math.max(...Object.values(totals));
+
+  document.getElementById('flowBars').innerHTML = Object.entries(totals).map(([zone,val])=>`
+    <div class="flow-row">
+      <div class="flow-label">${zone}</div>
+      <div class="flow-track"><div class="flow-fill ${riskZones.has(zone)?'risk':''}" style="width:${(val/max*100).toFixed(0)}%"></div></div>
+      <div class="flow-val">${Math.round(val).toLocaleString()} L</div>
+    </div>`).join('');
+}
+
+async function loadAlerts(){
+  const data = await j(`${API}/api/alerts`);
+  document.getElementById('alertCount').textContent = `${data.count} ACTIVE`;
+  document.getElementById('alertList').innerHTML = data.alerts.slice(0,12).map(a=>`
+    <div class="alert-item ${a.severity.toLowerCase()}">
+      <div class="alert-top">
+        <span class="alert-zone">${a.zone}</span>
+        <span class="sev-tag ${a.severity}">${a.severity}</span>
+      </div>
+      <div class="alert-note">${a.note}</div>
+      <div class="alert-time">${a.timestamp} · ${a.type.replace('_',' ')}</div>
+    </div>`).join('') || `<div style="color:var(--text-dim);font-size:13px;">No active alerts.</div>`;
+}
+
+async function loadRecommendations(){
+  const data = await j(`${API}/api/recommendations`);
+  document.getElementById('recommendationList').innerHTML = data.recommendations.map(r=>`
+    <div class="alert-item ${r.priority==='High'?'high':'medium'}">
+      <div class="alert-top"><span class="alert-zone">${r.zone}</span><span class="sev-tag ${r.priority==='High'?'High':'Medium'}">${r.priority}</span></div>
+      <div class="alert-note"><b>${r.action}</b><br>${r.reason}</div>
+    </div>`).join('');
+}
+
+async function triageImage(){
+  const input=document.getElementById('leakImage'), out=document.getElementById('imageResult');
+  if(!input.files.length){ out.textContent='Choose an image first.'; return; }
+  const fd=new FormData(); fd.append('file',input.files[0]);
+  out.textContent='Analyzing…';
+  try{
+    const r=await fetch(`${API}/api/leak-image`,{method:'POST',body:fd});
+    const d=await r.json();
+    out.innerHTML = r.ok ? `<b>${d.verdict}</b> · confidence ${(d.confidence*100).toFixed(0)}%<br>${d.note}` : (d.detail||'Image analysis failed.');
+  }catch(e){ out.textContent='Backend unavailable. Start FastAPI on port 8000.'; }
+}
+
+async function loadTickets(){
+  const data = await j(`${API}/api/tickets`);
+  document.getElementById('ticketList').innerHTML = data.tickets.map(t=>`
+    <div class="ticket-item">
+      <div>
+        <div style="font-weight:500;">#${t.id} · ${t.zone}</div>
+        <div style="color:var(--text-dim);font-size:11.5px;">${t.issue} — ${t.timestamp}</div>
+      </div>
+      <span class="status-pill">${t.status}</span>
+    </div>`).join('') || `<div style="color:var(--text-dim);font-size:13px;">No tickets yet.</div>`;
+}
+
+function askSuggested(el){
+  document.getElementById('chatInput').value = el.textContent;
+  sendChat();
+}
+
+async function sendChat(){
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  const log = document.getElementById('chatLog');
+  log.innerHTML += `<div class="msg user">${msg}</div>`;
+  input.value = '';
+  log.scrollTop = log.scrollHeight;
+
+  const res = await j(`${API}/api/chat`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message: msg})
+  });
+  log.innerHTML += `<div class="msg bot">${res.answer}</div>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+init();
+</script>
+</body>
+</html>

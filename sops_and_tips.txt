@@ -1,0 +1,33 @@
+[SOP] Leak Response Protocol
+When a High severity leakage-risk alert is raised, the facility manager should:
+1. Physically inspect the flagged zone within 4 hours (night-flow alerts) or 24 hours (spike alerts).
+2. Check common failure points: overflow tanks, flush valves, underground pipe joints, and outdoor taps.
+3. If a leak is confirmed, shut off the local supply valve and log a maintenance ticket.
+4. Re-check the zone's consumption 24-48 hours after the fix to confirm resolution.
+
+[SOP] Night-Flow Interpretation
+Continuous water flow between 1:00 AM and 4:00 AM in a hostel block, when no scheduled
+activity (cleaning, laundry) is occurring, is a strong leak indicator. A running toilet
+cistern, a leaking overhead tank ball valve, or a cracked underground pipe are the most
+common causes in campus buildings.
+
+[Conservation Tip] Bathroom Fixtures
+Leaking taps can waste over 20 litres per day per tap; a running toilet cistern can waste
+200+ litres per day. Fixing worn washers and float valves is the single highest-impact,
+lowest-cost conservation action for hostels.
+
+[Conservation Tip] Peak-Hour Load Management
+Morning (6-9 AM) and evening (6-9 PM) are peak usage windows in student hostels. Staggering
+shower/laundry timings across floors can reduce peak-hour pressure loss and reduce the
+likelihood of pipe stress leaks.
+
+[Conservation Tip] Rainwater and Greywater
+Given Parbhani's low and erratic rainfall, rooftop rainwater harvesting during the monsoon
+and greywater reuse (e.g., using wash-water for gardens) can meaningfully offset groundwater
+dependence for non-potable uses.
+
+[Policy Context] Parbhani Water Stress
+Parbhani district recorded only 523mm of rainfall in 2024, well below the long-term average,
+and groundwater extraction in the district exceeds natural recharge. Local nitrate contamination
+has also been reported in parts of Marathwada. Institutional water efficiency is therefore a
+meaningful contribution to district-level water security, not just a cost-saving measure.
